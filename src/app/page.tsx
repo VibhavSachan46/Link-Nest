@@ -1,7 +1,47 @@
+"use client"
+
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation'
+import { useState } from 'react';
+import toast from 'react-hot-toast';
+import axios from 'axios';
 
 export default function Home() {
+
+  const [username, setUsername] = useState('')
+  const router = useRouter()
+
+  const handleSubmit = async () => {
+    if (username) {
+      const toastId = toast.loading("Loading...");
+      try {
+        // Ensure payload is an object
+        const response = await axios.post("/api/users/checkusername", { username });
+
+        if (response.status === 200) {
+          toast.success("Username available")
+          router.push(`/signup?username=${encodeURIComponent(username)}`);
+        } else if (response.status === 201) {
+          console.log("Username already exists");
+          
+          toast.error("User with this name already exists");
+        }
+
+      } catch (error) {
+        // Log the error for debugging
+        console.error("Error checking username:", error);
+        
+      } finally {
+        toast.dismiss(toastId);
+      }
+
+    } else {
+      toast.error("Name is missing");
+    }
+  };
+
+
   return (
     <div className="flex flex-col min-h-screen text-white">
       {/* Navbar */}
@@ -37,11 +77,13 @@ export default function Home() {
               <input
                 type="text"
                 placeholder="yourname"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 className="flex-1 p-4 rounded-r-md text-black"
               />
             </div>
-            <Button variant="secondary" className="py-7 w-full transition-transform transform hover:scale-105">
-            <a href="/signup">Join for free</a>
+            <Button variant="secondary" className="py-7 w-full transition-transform transform hover:scale-105" onClick={handleSubmit}>
+              Join for free
             </Button>
           </div>
         </div>
